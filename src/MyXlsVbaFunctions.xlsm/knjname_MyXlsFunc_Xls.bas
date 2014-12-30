@@ -1,6 +1,9 @@
 Attribute VB_Name = "knjname_MyXlsFunc_xls"
 Option Explicit
 
+' Depends on "Micsoroft VBScript Regular Expressions 5.5"
+
+
 '* Returns a cell based on r but having different column(specified by colCell) or row(specified by rowCell).
 '*
 '* Typical usage:
@@ -80,17 +83,56 @@ Function rangeAsIterable(ByVal r As Range) As Object
     End If
 End Function
 
+Function hasWorksheet(ByVal wb As Workbook, ByVal sheetName$) As Boolean
+    hasWorksheet = Not getWorksheet(wb, sheetName) Is Nothing
+End Function
+
+Function getWorksheet(ByVal wb As Workbook, ByVal sheetName$) As Worksheet
+    Dim ws As Worksheet
+    For Each ws In wb.Worksheets
+        If ws.Name = sheetName Then
+            Set getWorksheet = ws
+            Exit Function
+        End If
+    Next
+End Function
+
+Function findFirstWorksheet(ByVal wb As Workbook, ByVal sheetRegexp As regexp) As Worksheet
+    Dim ws As Worksheet
+    For Each ws In wb.Worksheets
+        If sheetRegexp.Test(ws.Name) Then
+            Set findFirstWorksheet = ws
+            Exit Function
+        End If
+    Next
+End Function
+
+Function findAllSheets(ByVal wb As Workbook, ByVal sheetRegexp As regexp) As Collection
+    Set findAllSheets = New Collection
+    Dim ws As Worksheet
+    For Each ws In wb.Sheets
+        If sheetRegexp.Test(ws.Name) Then
+            findAllSheets.Add ws
+        End If
+    Next
+End Function
+
 Function getNonConflictSheetName$(ByVal sheetNameCandidate$, ByVal within As Workbook)
     ' TODO implement
 End Function
 
-Function putCellValuesH(ByVal r As Range, ParamArray values() As Variant)
+Function putCellValues(ByRef r As Range, ParamArray values() As Variant) As Range
     If r Is Nothing Then
-        
+        Set r = Workbooks.Add.Worksheets(1).[A1]
     End If
-
+    
+    r.Resize(UBound(values) - LBound(values)) = values
+    
+    Set putCellValuesH = r
+    moveToNextRow r
 End Function
 
-Sub test_iC()
-    Debug.Print iC(ActiveCell, ActiveCell, 3)
-End Sub
+Function moveToNextRow(ByRef r As Range, Optional ByVal moveOffsetRow = 1, Optional ByVal moveOffsetColumn = 0) As Range
+    Set r = r.Offset(moveOffsetRow, moveOffsetColumn)
+    Set moveToNextRow = r
+End Function
