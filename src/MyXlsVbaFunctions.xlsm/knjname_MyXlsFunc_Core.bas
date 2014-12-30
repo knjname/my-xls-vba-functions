@@ -4,7 +4,7 @@ Option Explicit
 ' Depends on "Microsoft Scripting Runtime"
 ' Depends on "Micsoroft VBScript Regular Expressions 5.5"
 
-Public xlsVbaFuncFSO As New FileSystemObject
+Private xlsVbaFuncFSO As New FileSystemObject
 
 Function increment&(ByRef value&, Optional ByVal added = 1)
     increment = value

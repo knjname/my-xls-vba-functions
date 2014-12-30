@@ -3,6 +3,8 @@ Option Explicit
 
 ' Depends on "Micsoroft VBScript Regular Expressions 5.5"
 
+Private xlsVbaFuncFSO As New FileSystemObject
+
 
 '* Returns a cell based on r but having different column(specified by colCell) or row(specified by rowCell).
 '*
@@ -87,6 +89,16 @@ Function hasWorksheet(ByVal wb As Workbook, ByVal sheetName$) As Boolean
     hasWorksheet = Not getWorksheet(wb, sheetName) Is Nothing
 End Function
 
+Function getWorkbook(ByVal bookName$) As Workbook
+    Dim wb As Workbook
+    For Each wb In Workbooks
+        If wb.Name = bookName Then
+            Set getWorkbook = wb
+            Exit Function
+        End If
+    Next
+End Function
+
 Function getWorksheet(ByVal wb As Workbook, ByVal sheetName$) As Worksheet
     Dim ws As Worksheet
     For Each ws In wb.Worksheets
@@ -128,11 +140,60 @@ Function putCellValues(ByRef r As Range, ParamArray values() As Variant) As Rang
     
     r.Resize(UBound(values) - LBound(values)) = values
     
-    Set putCellValuesH = r
+    Set putCellValues = r
     moveToNextRow r
 End Function
 
 Function moveToNextRow(ByRef r As Range, Optional ByVal moveOffsetRow = 1, Optional ByVal moveOffsetColumn = 0) As Range
     Set r = r.Offset(moveOffsetRow, moveOffsetColumn)
     Set moveToNextRow = r
+End Function
+
+Function shortenTooLongDocumentPath$(ByVal documentPath$)
+    If documentPath$ > 260 Then
+        shortenTooLongDocumentPath$ = xlsVbaFuncFSO.GetFile(documentPath).ShortPath
+    Else
+        shortenTooLongDocumentPath$ = documentPath
+    End If
+End Function
+
+Function openWorkbookQuietly(ByVal wbPath$, _
+    Optional ByVal readonly = True, _
+    Optional ByVal makeEventsOff As Boolean = False, _
+    Optional ByVal findFromOpenedBooksAtFirst As Boolean = True, _
+    Optional ByVal updateLinks As Boolean = False) As Workbook
+    
+On Error GoTo finalizingProc
+    
+    wbPath = shortenTooLongDocumentPath(wbPath)
+    
+    If makeEventsOff Then
+        Dim currentEventsEnabled
+        currentEventsEnabled = Application.EnableEvents
+        Application.EnableEvents = False
+    End If
+    
+    If findFromOpenedBooksAtFirst Then
+        Set openWorkbookQuietly = getWorkbook(xlsVbaFuncFSO.GetFile(wbPath).Name)
+    End If
+    
+    If openWorkbookQuietly Is Nothing Then
+        Set openWorkbookQuietly = Workbooks.Open(wbPath, updateLinks:=updateLinks, readonly:=readonly, ignorereadonlyrecommended:=True, notify:=False)
+    End If
+    
+    If makeEventsOff Then
+        Application.EnableEvents = currentEventsEnabled
+    End If
+    
+    Exit Function
+
+finalizingProc:
+
+    If makeEventsOff Then
+        Application.EnableEvents = currentEventsEnabled
+    End If
+    
+    ' Rethrow
+    Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
+
 End Function
