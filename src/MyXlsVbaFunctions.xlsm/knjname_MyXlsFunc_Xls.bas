@@ -197,3 +197,17 @@ finalizingProc:
     Err.Raise Err.Number, Err.Source, Err.Description, Err.HelpFile, Err.HelpContext
 
 End Function
+
+Function limitToUsedRange(ByVal r As Range) As Range
+    Set limitToUsedRange = Application.Intersect(r.Worksheet.UsedRange, r)
+End Function
+
+Function betterEndXlDown(ByVal r As Range) As Object
+    If Len(r) = 0 Then
+        Set betterEndXlDown = New Collection
+    ElseIf Len(r.Offset(1)) = 0 Then
+        Set betterEndXlDown = r.Offset(1)
+    Else
+        Set betterEndXlDown = r.End(xlDown)
+    End If
+End Function
