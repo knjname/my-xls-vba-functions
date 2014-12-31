@@ -202,12 +202,13 @@ Function limitToUsedRange(ByVal r As Range) As Range
     Set limitToUsedRange = Application.Intersect(r.Worksheet.UsedRange, r)
 End Function
 
-Function betterEndXlDown(ByVal r As Range) As Object
+' TODO make direction selectable
+Function betterEndXlDownRegion(ByVal r As Range) As Object
     If Len(r) = 0 Then
-        Set betterEndXlDown = New Collection
+        Set betterEndXlDownRegion = New Collection
     ElseIf Len(r.Offset(1)) = 0 Then
-        Set betterEndXlDown = r.Offset(1)
+        Set betterEndXlDownRegion = r.Offset(1)
     Else
-        Set betterEndXlDown = r.End(xlDown)
+        Set betterEndXlDownRegion = r.Worksheet.Range(r, r.End(xlDown))
     End If
 End Function

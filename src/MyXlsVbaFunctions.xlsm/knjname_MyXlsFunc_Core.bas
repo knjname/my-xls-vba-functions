@@ -171,8 +171,8 @@ Private Function seekFilesRecursively_exceedsLimitCount(ByVal result As Collecti
 End Function
 
 Private Function isOfficeTemporaryFile(ByVal fileName$) As Boolean
-    If Len(isOfficeTemporaryFile) > 3 Then
-        If Left(isOfficeTemporaryFile, 2) = "$~" Then
+    If Len(fileName) > 3 Then
+        If Left(fileName, 2) = "$~" Then
             isOfficeTemporaryFile = True
         End If
     End If
