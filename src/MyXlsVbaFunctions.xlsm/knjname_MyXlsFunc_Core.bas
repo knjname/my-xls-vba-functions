@@ -20,24 +20,132 @@ Function unifyToCrLf$(ByVal content$, Optional ByVal lineFeedChar = vbCrLf)
     unifyToCrLf = regexpReplace(content, "\r?\n|\r\n?|\n", lineFeedChar)
 End Function
 
+Function repeatString$(ByVal repeated$, ByVal count&)
+    If count < 1 Then Exit Function
+    
+    Do While True
+        If (count And 1) = 1 Then
+            repeatString = repeatString & repeated
+            count = count - 1
+            If count = 0 Then Exit Function
+        End If
+        count = count / 2
+        repeated = repeated & repeated
+    Loop
+End Function
+
 Function dict(ParamArray keyAndValues() As Variant) As Dictionary
     Dim d As Dictionary
     Set dict = addDictEntries(d, keyAndValues)
 End Function
 
-Function addDictEntries(ByRef d As Dictionary, keyAndValues() As Variant) As Dictionary
+Function addDictEntries(ByRef d As Dictionary, ByVal keyAndValues As Variant) As Dictionary
     If d Is Nothing Then
         Set d = New Dictionary
     End If
+    Set addDictEntries = d
     
     Dim i&
-    For i = LBound(keyAndValues) To UBound(keyAndValues)
+    For i = LBound(keyAndValues) To UBound(keyAndValues) Step 2
         If IsObject(keyAndValues(i + 1)) Then
             Set d(keyAndValues(i)) = keyAndValues(i + 1)
         Else
             d(keyAndValues(i)) = keyAndValues(i + 1)
         End If
     Next
+End Function
+
+Function iJoin$(ByVal iterableThing, Optional ByVal separator = "")
+    Dim eachValue
+    For Each eachValue In iterableThing
+        If Len(iterableJoin$) = 0 Then
+            iterableJoin$ = eachValue
+        Else
+            iterableJoin$ = iterableJoin & separator & eachValue
+        End If
+    Next
+End Function
+
+Function iterableToCollection(ByVal iterableThing) As Collection
+    Set iterableToCollection = New Collection
+    Dim eachValue
+    For Each eachValue In iterableThing
+        iterableToCollection.Add eachValue
+    Next
+End Function
+
+Function dictList(ByRef dict As Dictionary, ByVal key$) As Collection
+    If dict Is Nothing Then
+        Set dict = New Dictionary
+    End If
+    
+    If Not dict.Exists(key) Then
+        dict.Add key, New Collection
+    End If
+    
+    Set dictList = dict(key)
+End Function
+
+Function dictDict(ByRef dict As Dictionary, ByVal key$) As Dictionary
+    If dict Is Nothing Then
+        Set dict = New Dictionary
+    End If
+    
+    If Not dict.Exists(key) Then
+        dict.Add key, New Dictionary
+    End If
+    
+    Set dictDict = dict(key)
+End Function
+
+Function multipleReplace$(ByVal src$, ParamArray replacements() As Variant)
+    multipleReplace$ = src$
+    Dim i&
+    For i = LBound(replacements) To UBound(replacements) Step 2
+        multipleReplace = Replace(multipleReplace, replacements(i), replacements(i + 1))
+    Next
+End Function
+
+Function toJSON$(ByVal o As Variant, Optional ByVal prettyPrint = True, Optional ByVal nestedLevel& = 0)
+    
+    Dim prettyPrintIndent$
+    If prettyPrint Then
+        prettyPrintIndent$ = vbNewLine & repeatString(vbTab, nestedLevel + 1)
+    End If
+    
+    Dim tname$
+    tname$ = TypeName(o)
+    Select Case tname
+    Case "Integer", "Long", "LongLong", "Double", "Currency", "Byte"
+        toJSON = CStr(o)
+    Case "Boolean"
+        toJSON = IIf(o, "true", "false")
+    Case "String"
+        toJSON = """" & multipleReplace(o, "\", "\\", """", "\""") & """"
+    Case "Dictionary"
+        Dim eachKey
+        For Each eachKey In o.Keys
+            toJSON = toJSON & _
+                IIf(Len(toJSON) > 0, "," & prettyPrintIndent$, "") & _
+                toJSON(CStr(eachKey), prettyPrint, nestedLevel) & ": " & toJSON(o(eachKey), prettyPrint, nestedLevel + 1)
+        Next
+        toJSON = "{" & prettyPrintIndent & toJSON & "}"
+    Case "Empty", "Null", "Nothing"
+        toJSON = "null"
+    Case Else
+        If tname$ Like "*()" Or tname$ = "Collection" Then
+            Dim eachValue
+            For Each eachValue In o
+                toJSON = toJSON & _
+                    IIf(Len(toJSON) > 0, "," & prettyPrintIndent$, "") & _
+                    toJSON(eachValue, prettyPrint, nestedLevel + 1)
+            Next
+            toJSON = "[" & prettyPrintIndent & toJSON & "]"
+        Else
+            toJSON = toJSON(CStr(o), prettyPrint, nestedLevel)
+        End If
+    End Select
+    
 End Function
 
 Function seekFilesRecursively( _
@@ -167,7 +275,7 @@ Private Sub seekFilesRecursively_rec( _
 End Sub
 
 Private Function seekFilesRecursively_exceedsLimitCount(ByVal result As Collection, ByVal limitNumber&)
-    If limitNumber& > 0 Then seekFilesRecursively_exceedsLimitCount = result.Count = limitNumber&
+    If limitNumber& > 0 Then seekFilesRecursively_exceedsLimitCount = result.count = limitNumber&
 End Function
 
 Private Function isOfficeTemporaryFile(ByVal fileName$) As Boolean
@@ -236,5 +344,9 @@ Function regexpReplace$(ByVal replaced$, _
         regexpReplace = .Replace(replaced, replacement)
     End With
 
+End Function
+
+Function addLine(ByRef buffer$, Optional ByVal lineContent$ = "", Optional ByVal suffix$ = vbCrLf)
+    buffer = buffer & lineContent & suffix
 End Function
 

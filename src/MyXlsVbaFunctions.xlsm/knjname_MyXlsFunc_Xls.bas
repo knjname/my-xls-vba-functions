@@ -69,12 +69,12 @@ End Function
 
 Function copySheetToLast(ByVal copied As Worksheet, Optional ByRef copyTo As Workbook) As Worksheet
     If Not copyTo Is Nothing Then
-        copied.Copy After:=copyTo.Sheets(copyTo.Sheets.Count)
+        copied.Copy After:=copyTo.Sheets(copyTo.Sheets.count)
     Else
         copied.Copy
-        Set copyTo = Workbooks(Workbooks.Count)
+        Set copyTo = Workbooks(Workbooks.count)
     End If
-    Set copySheetToLast = copyTo.Sheets(copyTo.Sheets.Count)
+    Set copySheetToLast = copyTo.Sheets(copyTo.Sheets.count)
 End Function
 
 Function rangeAsIterable(ByVal r As Range) As Object
@@ -159,7 +159,7 @@ End Function
 
 Function openWorkbookQuietly(ByVal wbPath$, _
     Optional ByVal readonly = True, _
-    Optional ByVal makeEventsOff As Boolean = False, _
+    Optional ByVal turnOffEvents As Boolean = False, _
     Optional ByVal findFromOpenedBooksAtFirst As Boolean = True, _
     Optional ByVal updateLinks As Boolean = False) As Workbook
     
@@ -167,7 +167,7 @@ On Error GoTo finalizingProc
     
     wbPath = shortenTooLongDocumentPath(wbPath)
     
-    If makeEventsOff Then
+    If turnOffEvents Then
         Dim currentEventsEnabled
         currentEventsEnabled = Application.EnableEvents
         Application.EnableEvents = False
@@ -181,7 +181,7 @@ On Error GoTo finalizingProc
         Set openWorkbookQuietly = Workbooks.Open(wbPath, updateLinks:=updateLinks, readonly:=readonly, ignorereadonlyrecommended:=True, notify:=False)
     End If
     
-    If makeEventsOff Then
+    If turnOffEvents Then
         Application.EnableEvents = currentEventsEnabled
     End If
     
@@ -189,7 +189,7 @@ On Error GoTo finalizingProc
 
 finalizingProc:
 
-    If makeEventsOff Then
+    If turnOffEvents Then
         Application.EnableEvents = currentEventsEnabled
     End If
     
